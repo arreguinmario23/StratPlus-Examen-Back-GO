@@ -55,14 +55,73 @@ type LoginResponse struct {
 	FechaInicio time.Time `json:"fecha_inicio"`
 }
 
-// validarCorreo revisa que el correo tenga un formato básico válido.
-// Requiere que no esté vacío, contenga un "@" y al menos un ".".
+// validarCorreo revisa que el correo tenga un formato válido.
+// Verifica la estructura básica de un email: texto@texto.texto
 func validarCorreo(correo string) bool {
 	correo = strings.TrimSpace(correo)
-	if correo == "" || !strings.Contains(correo, "@") || !strings.Contains(correo, ".") {
+	if correo == "" {
 		return false
 	}
-	return true
+
+	// Dividir en partes por el @
+	partes := strings.Split(correo, "@")
+	if len(partes) != 2 {
+		return false // Debe tener exactamente un @
+	}
+
+	parteLocal := partes[0]
+	dominio := partes[1]
+
+	// Validar parte local (antes del @)
+	if len(parteLocal) == 0 || len(parteLocal) > 64 {
+		return false
+	}
+
+	// No puede empezar o terminar con punto
+	if strings.HasPrefix(parteLocal, ".") || strings.HasSuffix(parteLocal, ".") {
+		return false
+	}
+
+	// No puede tener puntos consecutivos
+	if strings.Contains(parteLocal, "..") {
+		return false
+	}
+
+	// Validar dominio
+	if len(dominio) == 0 || len(dominio) > 255 {
+		return false
+	}
+
+	// Debe contener al menos un punto
+	if !strings.Contains(dominio, ".") {
+		return false
+	}
+
+	// No puede empezar o terminar con punto o guión
+	if strings.HasPrefix(dominio, ".") || strings.HasSuffix(dominio, ".") ||
+		strings.HasPrefix(dominio, "-") || strings.HasSuffix(dominio, "-") {
+		return false
+	}
+
+	// Validar que tenga extensión después del último punto
+	ultimoPunto := strings.LastIndex(dominio, ".")
+	extension := dominio[ultimoPunto+1:]
+	if len(extension) < 2 {
+		return false // La extensión debe tener al menos 2 caracteres
+	}
+
+	// Validar caracteres permitidos en el correo
+	caracteresValidos := func(s string) bool {
+		for _, c := range s {
+			if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+				(c >= '0' && c <= '9') || c == '.' || c == '-' || c == '_' || c == '@') {
+				return false
+			}
+		}
+		return true
+	}
+
+	return caracteresValidos(correo)
 }
 
 // validarTelefono valida que el teléfono tenga exactamente 10 dígitos numéricos.
@@ -136,8 +195,8 @@ func registroHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Println("Falta campo password en el request.")
-		json.NewEncoder(w).Encode(ErrorResponse{Error: "Falta el campo password"})
+		fmt.Println("Falta campo contraseña en el request.")
+		json.NewEncoder(w).Encode(ErrorResponse{Error: "Falta el campo contraseña"})
 		return
 	}
 
@@ -205,8 +264,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		fmt.Println("Falta campo password en el request.")
-		json.NewEncoder(w).Encode(ErrorResponse{Error: "Falta el campo password"})
+		fmt.Println("Falta campo contraseña en el request.")
+		json.NewEncoder(w).Encode(ErrorResponse{Error: "Falta el campo contraseña"})
 		return
 	}
 
