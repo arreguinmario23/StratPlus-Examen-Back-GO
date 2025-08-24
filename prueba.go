@@ -124,16 +124,19 @@ func registroHandler(w http.ResponseWriter, r *http.Request) {
 	// Validación de campos obligatorios
 	if req.Correo == "" {
 		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println("Falta campo correo en el request.")
 		json.NewEncoder(w).Encode(ErrorResponse{Error: "Falta el campo correo"})
 		return
 	}
 	if req.Telefono == "" {
 		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println("Falta campo telefono en el request.")
 		json.NewEncoder(w).Encode(ErrorResponse{Error: "Falta el campo telefono"})
 		return
 	}
 	if req.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println("Falta campo password en el request.")
 		json.NewEncoder(w).Encode(ErrorResponse{Error: "Falta el campo password"})
 		return
 	}
@@ -175,7 +178,7 @@ func registroHandler(w http.ResponseWriter, r *http.Request) {
 		Telefono: req.Telefono,
 		Password: req.Password,
 	})
-	fmt.Println("Usuario registrado")
+	fmt.Println("Usuario registrado correctamente")
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, `{"mensaje":"Usuario registrado exitosamente"}`)
 }
@@ -189,17 +192,20 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println("El cuerpo de la peticion es invalido!!")
 		json.NewEncoder(w).Encode(ErrorResponse{Error: "Cuerpo inválido"})
 		return
 	}
 
 	if req.Correo == "" {
 		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println("Falta campo correo en el request.")
 		json.NewEncoder(w).Encode(ErrorResponse{Error: "Falta el campo correo"})
 		return
 	}
 	if req.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
+		fmt.Println("Falta campo password en el request.")
 		json.NewEncoder(w).Encode(ErrorResponse{Error: "Falta el campo password"})
 		return
 	}
@@ -215,6 +221,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if usuario == nil {
 		w.WriteHeader(http.StatusUnauthorized)
+		fmt.Println("Usuario no encontrado.")
 		json.NewEncoder(w).Encode(ErrorResponse{Error: "Correo o contraseña incorrectos"})
 		return
 	}
@@ -228,6 +235,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println("Error al generar el token")
 		json.NewEncoder(w).Encode(ErrorResponse{Error: "Error generando token"})
 		return
 	}
